@@ -1,61 +1,101 @@
 #include "deck.h"
-#include <stdlib.h>
-#include <string.h>
 
 /**
- * compare_cards - compares two cards
- * @card1: pointer to first card
- * @card2: pointer to second card
- *
- * Return: negative value if card1 is less than card2,
- *         positive value if card1 is greater than card2,
- *         zero if card1 is equal to card2.
- */
-int compare_cards(const void *card1, const void *card2)
+* sort_deck - sorts a deck of card
+* @deck: doubly linked list to sort
+*/
+void sort_deck(deck_node_t **deck)
 {
-    const card_t *c1 = (*(deck_node_t **)card1)->card;
-    const card_t *c2 = (*(deck_node_t **)card2)->card;
-    int value_cmp = strcmp(c1->value, c2->value);
-    if (value_cmp != 0)
-        return value_cmp;
-    return c1->kind - c2->kind;
+deck_node_t *curr;
+size_t len;
+deck_node_t *one, *two, *three, *four;
+len = list_len_deck(*deck);
+if (!deck || !*deck || len < 2)
+return;
+curr = *deck;
+while (curr)
+{
+if (curr->prev && card_value(curr) < card_value(curr->prev))
+{
+one = curr->prev->prev;
+two = curr->prev;
+three = curr;
+four = curr->next;
+two->next = four;
+if (four)
+four->prev = two;
+three->next = two;
+three->prev = one;
+if (one)
+one->next = three;
+else
+*deck = three;
+two->prev = three;
+curr = *deck;
+continue;
+}
+else
+curr = curr->next;
+}
 }
 
 /**
- * sort_deck - sorts a deck of cards
- * @deck: pointer to pointer to head node of deck
- */
-void sort_deck(deck_node_t **deck)
+* card_value - returns the value of a card
+* @node: card in a deck
+* Return: value between 1 and 52
+*/
+int card_value(deck_node_t *node)
 {
-    size_t i, len = 0;
-    deck_node_t *node = *deck;
-    deck_node_t **cards;
+char *val[13] = {"Ace", "2", "3", "4", "5", "6",
+"7", "8", "9", "10", "Jack", "Queen", "King"};
+char *kinds[4] = {"SPADE", "HEART", "CLUB", "DIAMOND"};
+int i, kind_val = 0;
+for (i = 1; i <= 13; i++)
+{
+if (!_strcmp(node->card->value, val[i - 1]))
+kind_val = i;
+}
+for (i = 1; i <= 4; i++)
+{
+if (!_strcmp(kinds[node->card->kind], kinds[i - 1]))
+kind_val = kind_val + (13 * i);
+}
+return (kind_val);
+}
 
-    while (node != NULL)
-    {
-        len++;
-        node = node->next;
-    }
+/**
+* _strcmp - compares two strings
+* @s1:the  first string to compare
+* @s2:the  second string to compare
+* Return: less than 0 if s1 is less than s2, 0 if they're equal,
+* more than 0 if s1 is greater than s2
+*/
+int _strcmp(const char *s1, const char *s2)
+{
+while (*s1 == *s2)
+{
+if (*s1 == '\0')
+{
+return (0);
+}
+s1++;
+s2++;
+}
+return (*s1 - *s2);
+}
 
-    cards = malloc(len * sizeof(*cards));
-    if (cards == NULL)
-        return;
-
-    node = *deck;
-    for (i = 0; i < len; i++)
-    {
-        cards[i] = node;
-        node = node->next;
-    }
-
-    qsort(cards, len, sizeof(*cards), compare_cards);
-
-    for (i = 0; i < len; i++)
-    {
-        cards[i]->prev = i == 0 ? NULL : cards[i-1];
-        cards[i]->next = i == len-1 ? NULL : cards[i+1];
-    }
-
-    *deck = cards[0];
-    free(cards);
+/**
+* list_len_deck - function returns the length of list
+* @list: lists' head
+* Return: length
+*/
+size_t list_len_deck(deck_node_t *list)
+{
+size_t len = 0;
+while (list)
+{
+len++;
+list = list->next;
+}
+return (len);
 }
